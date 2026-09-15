@@ -12,7 +12,8 @@ export function LogOutButton() {
     } catch (err: any) {
       // console.error(err);
     } finally {
-      localStorage.removeItem("auth_token");
+      localStorage.removeItem("token");
+      localStorage.removeItem("token_expires_at");
       router.push("/");
     }
   };
