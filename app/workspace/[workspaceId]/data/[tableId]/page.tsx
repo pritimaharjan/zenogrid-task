@@ -188,7 +188,6 @@ export default function DataPage() {
 
     async function loadData() {
       await getTableFields();
-      await loadRows();
     }
 
     loadData();
