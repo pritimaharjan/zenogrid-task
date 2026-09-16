@@ -53,40 +53,25 @@ export default function DataPage() {
 
   // GET ROWS
 
-  // async function loadRows(nextCursor?: string | null) {
-  //   try {
-  //     setLoading(true);
-  //     setError("");
+  async function loadRows() {
+    try {
+      setLoading(true);
+      setError("");
 
-  //     let url = `/workspaces/${workspaceId}/tables/${tableId}/rows?env=dev`;
+      let url = `/workspaces/${workspaceId}/tables/${tableId}/rows?env=dev`;
 
-  //     if (nextCursor) {
-  //       url += `&cursor=${encodeURIComponent(nextCursor)}`;
-  //     }
+      const response = await api.get(url);
+      setRows(response?.data ?? []);
 
-  //     const response = await api.get(url);
+      // console.log("ROWS RESPONSE:", response);
+    } catch (err: any) {
+      console.error(err);
 
-  //     console.log("ROWS RESPONSE:", response);
-
-  //     const newRows = response?.data ?? [];
-
-  //     const nextCursorValue = response?.meta?.cursor ?? null;
-
-  //     if (nextCursor) {
-  //       setRows((oldRows) => [...oldRows, ...newRows]);
-  //     } else {
-  //       setRows(newRows);
-  //     }
-
-  //     setCursor(nextCursorValue);
-  //   } catch (err: any) {
-  //     console.error(err);
-
-  //     setError(err?.message || "Failed to load rows.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
+      setError(err?.message || "Failed to load rows.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // DELETE ROW
 
@@ -104,7 +89,7 @@ export default function DataPage() {
       const token = response?.undo_token;
 
       // Remove row from UI
-      setRows((oldRows) => oldRows.filter((row) => row.id !== rowId));
+      setRows((rows) => rows.filter((row) => row.id !== rowId));
 
       // Save undo token
       if (token) {
@@ -144,7 +129,7 @@ export default function DataPage() {
 
       setUndoToken(null);
 
-      // await loadRows();
+      await loadRows();
     } catch (err: any) {
       setError(err?.message || "Failed to restore row.");
     } finally {
@@ -188,6 +173,7 @@ export default function DataPage() {
 
     async function loadData() {
       await getTableFields();
+      await loadRows();
     }
 
     loadData();
@@ -197,6 +183,8 @@ export default function DataPage() {
     return <div className="p-6">Loading table...</div>;
   }
 
+  console.log("fields:", fields);
+  console.log("rows:", rows);
   // UI
 
   return (
@@ -257,6 +245,9 @@ export default function DataPage() {
                 <tr key={row.id} className="border-b hover:bg-gray-50">
                   {fields.map((field) => {
                     const value = row.values?.[field.key];
+                    console.log("VALUE:", value);
+                    console.log("FIELD:", field.key);
+                    console.log("ROW:", row.values?.[field.key]);
 
                     return (
                       <td
@@ -274,7 +265,6 @@ export default function DataPage() {
                                 e.currentTarget.blur();
                               }
                             }}
-                            //   className="w-full rounded border px-2 py-1"
                           />
                         ) : value === null ||
                           value === undefined ||
@@ -313,18 +303,6 @@ export default function DataPage() {
       {rows.length === 0 && (
         <div className="py-10 text-center text-gray-500">No rows found.</div>
       )}
-
-      {/* {cursor && (
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => loadRows(cursor)}
-            disabled={loading}
-            className="rounded border px-5 py-2 hover:bg-gray-100 disabled:opacity-50"
-          >
-            {loading ? "Loading..." : "Load More"}
-          </button>
-        </div>
-      )} */}
     </div>
   );
 }
